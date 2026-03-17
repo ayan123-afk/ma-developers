@@ -12,7 +12,169 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
+        tailwind.config = <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Portfolio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
         tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { dark: '#0a0a0f', primary: '#8b5cf6' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0a0f; color: #ffffff; }
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .input-field { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s; }
+        .input-field:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
+        
+        /* Custom File Input Styling */
+        input[type="file"]::file-selector-button {
+            background-color: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 1rem;
+            font-weight: 500;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: #7c3aed;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+
+    <div class="absolute w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] top-[-100px] left-[-100px] z-[-1]"></div>
+
+    <div class="w-full max-w-lg glass-panel rounded-3xl p-8 relative z-10">
+        
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight">Add Project</h1>
+                <p class="text-gray-400 text-sm mt-1">Uploads image & syncs to Supabase</p>
+            </div>
+            <a href="index.html" class="text-gray-400 hover:text-white transition-colors" title="Back to site">
+                <i class="fas fa-home text-xl"></i>
+            </a>
+        </div>
+
+        <div id="alert-box" class="hidden mb-6 bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 rounded-lg text-sm flex items-center">
+            <i class="fas fa-check-circle mr-2"></i> Project published successfully!
+        </div>
+
+        <form id="add-project-form" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Project Title</label>
+                <input type="text" id="title" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="e.g., Next.js Dashboard">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                <textarea id="description" required rows="3" class="input-field w-full px-4 py-3 rounded-xl" placeholder="Describe the project features..."></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Live URL</label>
+                <input type="url" id="live_url" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="https://your-project.com">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Project Image</label>
+                <input type="file" id="image" accept="image/*" required class="input-field w-full px-4 py-2.5 rounded-xl text-gray-400">
+                <p class="text-xs text-gray-500 mt-1">Recommended: 16:9 Aspect Ratio (e.g., 1280x720)</p>
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 rounded-xl transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(139,92,246,0.3)] mt-4">
+                Publish Project
+            </button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { uploadImage, addProject } from './supabase.js';
+
+        const form = document.getElementById('add-project-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const alertBox = document.getElementById('alert-box');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Uploading Image...';
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-70');
+            alertBox.classList.add('hidden');
+            
+            // 1. Get Form Data
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const live_url = document.getElementById('live_url').value;
+            const fileInput = document.getElementById('image');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select an image.");
+                resetButton();
+                return;
+            }
+
+            // 2. Upload Image to Supabase Storage
+            const uploadResult = await uploadImage(file);
+            
+            if (!uploadResult.success) {
+                alert('Image upload failed. Ensure "madevelopers" bucket is public and allows inserts.');
+                resetButton();
+                return;
+            }
+
+            // 3. Insert Project Data to Database
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving Project...';
+            
+            const projectData = {
+                title,
+                description,
+                live_url,
+                image_url: uploadResult.url // Public URL from Supabase Storage
+            };
+
+            const result = await addProject(projectData);
+            
+            // 4. Reset UI
+            resetButton();
+
+            if (result.success) {
+                form.reset();
+                alertBox.classList.remove('hidden');
+                setTimeout(() => alertBox.classList.add('hidden'), 4000);
+            } else {
+                alert('An error occurred inserting into the database.');
+            }
+        });
+
+        function resetButton() {
+            submitBtn.innerHTML = 'Publish Project';
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-70');
+        }
+    </script>
+</body>
+</html>
             theme: {
                 extend: {
                     fontFamily: { sans: ['Poppins', 'sans-serif'] },
