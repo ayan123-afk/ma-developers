@@ -5,45 +5,73 @@ const supabaseKey = 'sb_publishable_EXlYEOQCtIayaRgM8do3Bg_tVLyYTux';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+// FETCH PROJECTS
 export async function fetchProjects() {
-    const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
     if (error) console.error('Fetch error:', error);
     return data || [];
 }
 
+// UPLOAD IMAGE (YOUR BUCKET)
 export async function uploadImage(file) {
     try {
         const fileExt = file.name.split('.').pop();
-        // Create a unique clean filename
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `projects/${fileName}`;
 
-        // Upload to bucket
-        const { data, error } = await supabase.storage
+        const { error } = await supabase.storage
             .from('madevelopers')
             .upload(filePath, file, { cacheControl: '3600', upsert: true });
 
         if (error) throw error;
 
-        // Get public URL
-        const { data: publicUrlData } = supabase.storage
+        const { data } = supabase.storage
             .from('madevelopers')
             .getPublicUrl(filePath);
 
-        return { success: true, url: publicUrlData.publicUrl };
+        return { success: true, url: data.publicUrl };
     } catch (err) {
-        console.error('Storage Error:', err);
-        return { success: false, error: err.message || 'Failed to upload image' };
+        return { success: false, error: err.message };
     }
 }
 
+// ADD PROJECT
 export async function addProject(projectData) {
     try {
-        const { data, error } = await supabase.from('projects').insert([projectData]);
+        const { data, error } = await supabase
+            .from('projects')
+            .insert([projectData]);
+
         if (error) throw error;
+
         return { success: true, data };
     } catch (err) {
-        console.error('Database Error:', err);
-        return { success: false, error: err.message || 'Failed to insert to database' };
+        return { success: false, error: err.message };
     }
+}
+
+// LOGIN
+export async function login(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data };
+}
+
+// GET SESSION
+export async function getSession() {
+    const { data } = await supabase.auth.getSession();
+    return data.session;
+}
+
+// LOGOUT
+export async function logout() {
+    await supabase.auth.signOut();
 }
