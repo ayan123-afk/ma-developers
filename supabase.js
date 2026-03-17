@@ -22,6 +22,29 @@ export async function fetchProjects() {
     return data;
 }
 
+// Upload Image Function (To 'madevelopers' bucket)
+export async function uploadImage(file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `projects/${fileName}`;
+
+    const { data, error } = await supabase.storage
+        .from('madevelopers')
+        .upload(filePath, file);
+
+    if (error) {
+        console.error('Error uploading image:', error);
+        return { success: false, error };
+    }
+
+    // Get the public URL of the uploaded image
+    const { data: publicUrlData } = supabase.storage
+        .from('madevelopers')
+        .getPublicUrl(filePath);
+
+    return { success: true, url: publicUrlData.publicUrl };
+}
+
 // Add Project Function
 export async function addProject(projectData) {
     const { data, error } = await supabase
