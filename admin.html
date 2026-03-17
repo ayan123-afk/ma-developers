@@ -1,123 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Portfolio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: { extend: { fontFamily: { sans: ['Poppins', 'sans-serif'] }, colors: { primary: '#8b5cf6' } } }
-        }
-    </script>
-    <style>
-        body { background-color: #050505; color: #ffffff; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .input-field { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s; }
-        .input-field:focus { outline: none; border-color: #8b5cf6; }
-        input[type="file"]::file-selector-button { background-color: #8b5cf6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; margin-right: 1rem; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+body { background:#050505; color:white; }
+.glass { background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); }
+.input { background:#111; border:1px solid #333; padding:10px; width:100%; border-radius:10px; }
+</style>
 </head>
-<body class="antialiased min-h-screen flex items-center justify-center p-6 relative">
 
-    <div class="w-full max-w-lg glass rounded-3xl p-8 relative z-10">
-        
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold">Add Project</h1>
-            <a href="index.html" class="text-gray-400 hover:text-white"><i class="fas fa-home text-xl"></i></a>
-        </div>
+<body class="flex items-center justify-center min-h-screen p-6">
 
-        <!-- SUCCESS ALERT -->
-        <div id="success-box" class="hidden mb-6 bg-green-500/10 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg text-sm">
-            <i class="fas fa-check-circle mr-2"></i> Successfully published!
-        </div>
+<!-- LOGIN -->
+<div id="loginBox" class="w-full max-w-md glass p-8 rounded-2xl">
+    <h2 class="text-2xl font-bold mb-6 text-center">Admin Login</h2>
 
-        <!-- ERROR ALERT -->
-        <div id="error-box" class="hidden mb-6 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm break-words">
-            <i class="fas fa-exclamation-triangle mr-2"></i> <span id="error-message">Error</span>
-        </div>
+    <input id="email" type="email" placeholder="Email" class="input mb-4">
+    <input id="password" type="password" placeholder="Password" class="input mb-4">
 
-        <form id="add-form" class="space-y-5">
-            <div>
-                <label class="block text-sm text-gray-400 mb-1">Title</label>
-                <input type="text" id="title" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="Project Name">
-            </div>
-            <div>
-                <label class="block text-sm text-gray-400 mb-1">Description</label>
-                <textarea id="description" required rows="3" class="input-field w-full px-4 py-3 rounded-xl" placeholder="Project details..."></textarea>
-            </div>
-            <div>
-                <label class="block text-sm text-gray-400 mb-1">Live URL</label>
-                <input type="url" id="live_url" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="https://...">
-            </div>
-            <div>
-                <label class="block text-sm text-gray-400 mb-1">Image Cover</label>
-                <input type="file" id="image" accept="image/*" required class="input-field w-full px-4 py-2 rounded-xl text-gray-400">
-            </div>
+    <button id="loginBtn" class="w-full bg-purple-600 py-3 rounded-xl">
+        Login
+    </button>
 
-            <button type="submit" id="submit-btn" class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl transition-all mt-4">
-                Publish Project
-            </button>
-        </form>
+    <p id="loginError" class="text-red-400 mt-3 hidden"></p>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden w-full max-w-lg glass p-8 rounded-2xl">
+
+    <div class="flex justify-between mb-6">
+        <h2 class="text-2xl font-bold">Add Project</h2>
+        <button id="logoutBtn" class="text-red-400">Logout</button>
     </div>
 
-    <script type="module">
-        import { uploadImage, addProject } from './supabase.js';
+    <p id="success" class="text-green-400 hidden mb-3">Added successfully</p>
+    <p id="error" class="text-red-400 hidden mb-3"></p>
 
-        const form = document.getElementById('add-form');
-        const submitBtn = document.getElementById('submit-btn');
-        const successBox = document.getElementById('success-box');
-        const errorBox = document.getElementById('error-box');
-        const errorMsg = document.getElementById('error-message');
+    <input id="title" placeholder="Title" class="input mb-3">
+    <textarea id="description" placeholder="Description" class="input mb-3"></textarea>
+    <input id="live_url" placeholder="Live URL" class="input mb-3">
+    <input type="file" id="image" class="input mb-4">
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Reset UI
-            successBox.classList.add('hidden');
-            errorBox.classList.add('hidden');
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Uploading Image...';
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50');
+    <button id="publishBtn" class="w-full bg-purple-600 py-3 rounded-xl">
+        Publish
+    </button>
 
-            try {
-                const file = document.getElementById('image').files[0];
-                if (!file) throw new Error("Please select an image file.");
+</div>
 
-                // 1. Upload Image
-                const uploadRes = await uploadImage(file);
-                if (!uploadRes.success) throw new Error("Image Upload Error: " + uploadRes.error);
+<script type="module">
+import { supabase } from './supabase.js';
 
-                // 2. Insert to Database
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving to Database...';
-                
-                const projectData = {
-                    title: document.getElementById('title').value,
-                    description: document.getElementById('description').value,
-                    live_url: document.getElementById('live_url').value,
-                    image_url: uploadRes.url
-                };
+// AUTO LOGIN CHECK
+const { data } = await supabase.auth.getUser();
+if (data.user) showDashboard();
 
-                const dbRes = await addProject(projectData);
-                if (!dbRes.success) throw new Error("Database Error: " + dbRes.error);
+// LOGIN
+document.getElementById('loginBtn').onclick = async () => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-                // 3. Success
-                form.reset();
-                successBox.classList.remove('hidden');
-            } catch (error) {
-                // Show Error
-                errorMsg.innerText = error.message;
-                errorBox.classList.remove('hidden');
-            } finally {
-                // Restore Button
-                submitBtn.innerHTML = 'Publish Project';
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50');
-            }
-        });
-    </script>
+    const { error } = await supabase.auth.signInWithPassword({
+        email, password
+    });
+
+    if (error) {
+        showError('loginError', error.message);
+    } else {
+        showDashboard();
+    }
+};
+
+// LOGOUT
+document.getElementById('logoutBtn').onclick = async () => {
+    await supabase.auth.signOut();
+    location.reload();
+};
+
+// SHOW DASHBOARD
+function showDashboard() {
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+}
+
+// ADD PROJECT
+document.getElementById('publishBtn').onclick = async () => {
+    hideMsg();
+
+    const file = document.getElementById('image').files[0];
+    if (!file) return showError('error', 'Select image');
+
+    const fileName = Date.now() + "-" + file.name;
+
+    // Upload
+    const { error: uploadError } = await supabase.storage
+        .from("projects")
+        .upload(fileName, file);
+
+    if (uploadError) return showError('error', uploadError.message);
+
+    const { data: urlData } = supabase.storage
+        .from("projects")
+        .getPublicUrl(fileName);
+
+    // Insert
+    const { error } = await supabase.from("projects").insert([{
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        live_url: document.getElementById('live_url').value,
+        image_url: urlData.publicUrl
+    }]);
+
+    if (error) return showError('error', error.message);
+
+    document.getElementById('success').classList.remove('hidden');
+};
+
+// HELPERS
+function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.innerText = msg;
+    el.classList.remove('hidden');
+}
+
+function hideMsg() {
+    document.getElementById('error').classList.add('hidden');
+    document.getElementById('success').classList.add('hidden');
+}
+
+</script>
+
 </body>
 </html>
