@@ -16,33 +16,39 @@ export async function fetchProjects() {
         .order('created_at', { ascending: false });
 
     if (error) {
-        console.error('Error fetching projects:', error);
+        console.error('Error fetching projects:', error.message);
         return [];
     }
     return data;
 }
 
-// Upload Image Function (To 'madevelopers' bucket)
+// Upload Image Function
 export async function uploadImage(file) {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `projects/${fileName}`;
+    try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `projects/${fileName}`;
 
-    const { data, error } = await supabase.storage
-        .from('madevelopers')
-        .upload(filePath, file);
+        // Upload to 'madevelopers' bucket
+        const { data, error } = await supabase.storage
+            .from('madevelopers')
+            .upload(filePath, file, { cacheControl: '3600', upsert: false });
 
-    if (error) {
-        console.error('Error uploading image:', error);
-        return { success: false, error };
+        if (error) {
+            console.error('Supabase Storage Error:', error.message);
+            return { success: false, error: error.message };
+        }
+
+        // Get the public URL of the uploaded image
+        const { data: publicUrlData } = supabase.storage
+            .from('madevelopers')
+            .getPublicUrl(filePath);
+
+        return { success: true, url: publicUrlData.publicUrl };
+    } catch (err) {
+        console.error('Unexpected Upload Error:', err);
+        return { success: false, error: 'Unexpected network error during upload.' };
     }
-
-    // Get the public URL of the uploaded image
-    const { data: publicUrlData } = supabase.storage
-        .from('madevelopers')
-        .getPublicUrl(filePath);
-
-    return { success: true, url: publicUrlData.publicUrl };
 }
 
 // Add Project Function
@@ -52,8 +58,8 @@ export async function addProject(projectData) {
         .insert([projectData]);
 
     if (error) {
-        console.error('Error adding project:', error);
-        return { success: false, error };
+        console.error('Supabase Database Error:', error.message);
+        return { success: false, error: error.message };
     }
     return { success: true, data };
 }
