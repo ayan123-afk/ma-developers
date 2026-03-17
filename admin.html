@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Portfolio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { dark: '#0a0a0f', primary: '#8b5cf6' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0a0f; color: #ffffff; }
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .input-field { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s; }
+        .input-field:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+
+    <!-- Ambient Glow -->
+    <div class="absolute w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] top-[-100px] left-[-100px] z-[-1]"></div>
+
+    <div class="w-full max-w-lg glass-panel rounded-3xl p-8 relative z-10 animate-fade-in-up">
+        
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight">Add Project</h1>
+                <p class="text-gray-400 text-sm mt-1">Syncs directly to Supabase DB</p>
+            </div>
+            <a href="index.html" class="text-gray-400 hover:text-white transition-colors" title="Back to site">
+                <i class="fas fa-home text-xl"></i>
+            </a>
+        </div>
+
+        <!-- Success Message Alert -->
+        <div id="alert-box" class="hidden mb-6 bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 rounded-lg text-sm flex items-center">
+            <i class="fas fa-check-circle mr-2"></i> Project successfully published!
+        </div>
+
+        <form id="add-project-form" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Project Title</label>
+                <input type="text" id="title" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="e.g., E-Commerce App">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                <textarea id="description" required rows="3" class="input-field w-full px-4 py-3 rounded-xl" placeholder="Describe the project..."></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Live URL</label>
+                <input type="url" id="live_url" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="https://...">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">FontAwesome Icon Class</label>
+                <input type="text" id="icon" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="e.g., fas fa-rocket">
+                <p class="text-xs text-gray-500 mt-1">Visit fontawesome.com for icon names</p>
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 rounded-xl transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(139,92,246,0.3)] flex justify-center items-center">
+                <span>Publish Project</span>
+            </button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { addProject } from './supabase.js';
+
+        const form = document.getElementById('add-project-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const alertBox = document.getElementById('alert-box');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // UI Loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Publishing...';
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-70');
+            alertBox.classList.add('hidden');
+            
+            // Gather Data
+            const projectData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                live_url: document.getElementById('live_url').value,
+                icon: document.getElementById('icon').value
+            };
+
+            // Call Supabase
+            const result = await addProject(projectData);
+            
+            // UI Reset & Feedback
+            submitBtn.innerHTML = 'Publish Project';
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-70');
+
+            if (result.success) {
+                form.reset();
+                alertBox.classList.remove('hidden');
+                setTimeout(() => alertBox.classList.add('hidden'), 4000);
+            } else {
+                alert('An error occurred. Please check console for details.');
+            }
+        });
+    </script>
+</body>
+</html>
