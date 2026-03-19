@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -23,40 +22,387 @@
         }
     </script>
     <style>
-        body { background-color: #050505; color: #ffffff; overflow-x: hidden; }
+        body { 
+            background-color: #050505; 
+            color: #ffffff; 
+            overflow-x: hidden;
+            position: relative;
+        }
         
         /* Typography */
-        .gradient-text { background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; color: transparent; }
+        .gradient-text { 
+            background: linear-gradient(135deg, #8b5cf6, #ec4899); 
+            -webkit-background-clip: text; 
+            background-clip: text;
+            color: transparent; 
+            background-size: 200% 200%;
+            animation: gradientShift 8s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
         
         /* Background Glows */
-        .glow-blob { position: absolute; width: 600px; height: 600px; border-radius: 50%; filter: blur(120px); z-index: -1; pointer-events: none; opacity: 0.4; }
-        .glow-purple { background: rgba(139, 92, 246, 0.3); top: -200px; left: -200px; }
-        .glow-pink { background: rgba(236, 72, 153, 0.2); bottom: 10%; right: -200px; }
+        .glow-blob { 
+            position: absolute; 
+            width: 600px; 
+            height: 600px; 
+            border-radius: 50%; 
+            filter: blur(120px); 
+            z-index: -1; 
+            pointer-events: none; 
+            opacity: 0.4;
+            transition: all 0.5s ease;
+        }
+        .glow-purple { 
+            background: rgba(139, 92, 246, 0.3); 
+            top: -200px; 
+            left: -200px;
+            animation: floatPurple 20s ease-in-out infinite;
+        }
+        .glow-pink { 
+            background: rgba(236, 72, 153, 0.2); 
+            bottom: 10%; 
+            right: -200px;
+            animation: floatPink 20s ease-in-out infinite;
+        }
+        
+        @keyframes floatPurple {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(100px, 50px) scale(1.1); }
+            50% { transform: translate(50px, 100px) scale(1); }
+            75% { transform: translate(-50px, 50px) scale(0.9); }
+        }
+        
+        @keyframes floatPink {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(-100px, -50px) scale(0.9); }
+            50% { transform: translate(-50px, -100px) scale(1.1); }
+            75% { transform: translate(50px, -50px) scale(1); }
+        }
 
         /* Animations */
-        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-        .reveal.active { opacity: 1; transform: translateY(0); }
+        .reveal { 
+            opacity: 0; 
+            transform: translateY(40px); 
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        .reveal.active { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
         
-        /* Custom Scrollbar */
+        /* Custom Scrollbar with Animation */
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #222; border-radius: 5px; }
-        ::-webkit-scrollbar-thumb:hover { background: #8b5cf6; }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        ::-webkit-scrollbar-thumb:hover { 
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            transform: scaleX(1.5);
+        }
 
         /* Glassmorphism utility */
-        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass { 
+            background: rgba(255, 255, 255, 0.02); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .glass:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 10px 30px -15px rgba(139, 92, 246, 0.3);
+        }
 
         /* Mobile Menu Transitions */
         #mobile-menu {
-            transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.3s ease;
             max-height: 0;
             opacity: 0;
+            transform: translateY(-10px);
             overflow: hidden;
         }
         #mobile-menu.open {
             max-height: 300px;
             opacity: 1;
+            transform: translateY(0);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Navbar Animation */
+        nav {
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        nav.scrolled {
+            background: rgba(5, 5, 5, 0.95);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Animated Stats Cards */
+        .stat-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        
+        /* Project Card Animations */
+        .project-card {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .project-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 2px solid transparent;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .project-card:hover::after {
+            opacity: 0.5;
+        }
+        
+        .project-card img {
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .project-card:hover img {
+            transform: scale(1.1);
+        }
+        
+        /* Button Animations */
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+        
+        .btn-primary:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        /* Social Icons Animation */
+        .social-icon {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: inline-block;
+        }
+        
+        .social-icon:hover {
+            transform: translateY(-5px) scale(1.2);
+        }
+        
+        /* Profile Image Animation */
+        .profile-container {
+            animation: floatProfile 6s ease-in-out infinite;
+        }
+        
+        @keyframes floatProfile {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* Typing Animation for Hero */
+        .hero-title {
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Skill Items Animation */
+        .skill-item {
+            transition: all 0.3s ease;
+            animation: slideInRight 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .skill-item:nth-child(1) { animation-delay: 0.1s; }
+        .skill-item:nth-child(2) { animation-delay: 0.2s; }
+        .skill-item:nth-child(3) { animation-delay: 0.3s; }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Contact Card Animation */
+        .contact-card {
+            transition: all 0.5s ease;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-10px) scale(1.02);
+        }
+        
+        .contact-card .email-icon {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        /* Loader Animation */
+        .fa-circle-notch {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Hover underline animation for nav links */
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #ec4899);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        /* Mobile menu links animation */
+        .mobile-link {
+            transition: all 0.3s ease;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .mobile-link:hover {
+            transform: translateX(10px);
+            color: #8b5cf6;
+        }
+        
+        /* Stats counter animation */
+        .stat-number {
+            animation: countUp 2s ease-out forwards;
+        }
+        
+        /* Footer animation */
+        footer p {
+            transition: all 0.3s ease;
+        }
+        
+        footer p:hover {
+            color: #8b5cf6;
+            letter-spacing: 1px;
+        }
+        
+        /* Smooth section transitions */
+        section {
+            transition: background-color 0.3s ease;
+        }
+        
+        /* Image loading animation */
+        img {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Enhanced glass effect on hover */
+        .glass-enhanced {
+            transition: all 0.3s ease;
+        }
+        
+        .glass-enhanced:hover {
+            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+        
+        /* Arrow animation */
+        .arrow-animation {
+            transition: transform 0.3s ease;
+        }
+        
+        .group:hover .arrow-animation {
+            transform: translateX(5px) rotate(-45deg);
+        }
+        
+        /* Border glow animation */
+        @keyframes borderGlow {
+            0%, 100% { border-color: rgba(139, 92, 246, 0.3); }
+            50% { border-color: rgba(236, 72, 153, 0.3); }
+        }
+        
+        .glow-border {
+            animation: borderGlow 3s ease-in-out infinite;
         }
     </style>
 </head>
@@ -72,23 +418,25 @@
             
             <!-- Logo -->
             <a href="#home" class="flex items-center gap-3 text-2xl font-bold tracking-tighter group">
-                <img src="https://i.postimg.cc/L8b9hZ8F/made-this-with-gemini.jpg" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-transparent group-hover:border-primary transition-all duration-300">
-                Ayan<span class="text-primary">.</span>
+                <img src="https://i.postimg.cc/L8b9hZ8F/made-this-with-gemini.jpg" alt="Logo" class="w-10 h-10 rounded-full object-cover border-2 border-transparent group-hover:border-primary transition-all duration-300 transform group-hover:scale-110">
+                Ayan<span class="gradient-text">.</span>
             </a>
             
             <!-- Desktop Menu -->
             <div class="hidden md:flex space-x-8 text-sm font-medium">
-                <a href="#about" class="text-gray-300 hover:text-white hover:text-primary transition-colors">About</a>
-                <a href="#projects" class="text-gray-300 hover:text-white hover:text-primary transition-colors">Projects</a>
-                <a href="#contact" class="text-gray-300 hover:text-white hover:text-primary transition-colors">Contact</a>
+                <a href="#about" class="nav-link text-gray-300 hover:text-white transition-colors">About</a>
+                <a href="#projects" class="nav-link text-gray-300 hover:text-white transition-colors">Projects</a>
+                <a href="#contact" class="nav-link text-gray-300 hover:text-white transition-colors">Contact</a>
             </div>
             
             <!-- Let's Talk Button (Desktop) -->
-            <a href="#contact" class="hidden md:block bg-white/10 hover:bg-white/20 px-5 py-2 rounded-full text-sm font-medium transition-all">Let's Talk</a>
+            <a href="#contact" class="hidden md:block bg-white/10 hover:bg-white/20 px-5 py-2 rounded-full text-sm font-medium transition-all transform hover:scale-105 hover:-translate-y-1">
+                Let's Talk
+            </a>
 
             <!-- Mobile Hamburger Button -->
             <button id="mobile-menu-btn" class="md:hidden text-gray-300 hover:text-white focus:outline-none p-2 cursor-pointer">
-                <i class="fas fa-bars text-2xl transition-transform duration-300" id="mobile-icon"></i>
+                <i class="fas fa-bars text-2xl transition-all duration-300" id="mobile-icon"></i>
             </button>
         </div>
 
@@ -108,7 +456,7 @@
             
             <!-- Left Text Content -->
             <div class="text-center lg:text-left order-2 lg:order-1 mt-8 lg:mt-0">
-                <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full glass text-primary text-xs font-semibold tracking-wide uppercase">
+                <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full glass text-primary text-xs font-semibold tracking-wide uppercase transform hover:scale-105 transition-all">
                     <span class="relative flex h-2 w-2">
                       <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                       <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -116,7 +464,7 @@
                     Available for new opportunities
                 </div>
                 
-                <h1 class="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6 leading-tight tracking-tighter">
+                <h1 class="hero-title text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6 leading-tight tracking-tighter">
                     Hi, I'm <br class="hidden lg:block"> <span class="gradient-text">Muhammad Ayan</span>
                 </h1>
                 
@@ -125,15 +473,15 @@
                 </p>
                 
                 <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-                    <a href="#projects" class="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-medium transition-all hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(139,92,246,0.4)] inline-flex items-center justify-center">
-                        Explore My Work <i class="fas fa-arrow-right ml-2"></i>
+                    <a href="#projects" class="btn-primary bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-medium transition-all hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(139,92,246,0.4)] inline-flex items-center justify-center">
+                        Explore My Work <i class="fas fa-arrow-right ml-2 arrow-animation"></i>
                     </a>
                 </div>
             </div>
 
             <!-- Right Corner Profile Picture -->
             <div class="flex justify-center lg:justify-end order-1 lg:order-2">
-                <div class="relative w-64 h-64 sm:w-80 sm:h-80 lg:w-[450px] lg:h-[450px]">
+                <div class="profile-container relative w-64 h-64 sm:w-80 sm:h-80 lg:w-[450px] lg:h-[450px]">
                     <!-- Outer Glowing Ring -->
                     <div class="absolute inset-0 bg-gradient-to-tr from-primary to-secondary rounded-full blur-2xl opacity-30 animate-pulse"></div>
                     <!-- Inner Background to separate image -->
@@ -163,15 +511,15 @@
                     </p>
                     
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        <div class="glass p-4 rounded-2xl text-center hover:border-primary/50 transition-colors">
+                        <div class="stat-card glass p-4 rounded-2xl text-center hover:border-primary/50 transition-colors">
                             <h3 class="text-3xl font-bold text-white mb-1">3+</h3>
                             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Years Exp.</p>
                         </div>
-                        <div class="glass p-4 rounded-2xl text-center hover:border-primary/50 transition-colors">
+                        <div class="stat-card glass p-4 rounded-2xl text-center hover:border-primary/50 transition-colors">
                             <h3 class="text-3xl font-bold text-white mb-1">50+</h3>
                             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Projects</p>
                         </div>
-                        <div class="glass p-4 rounded-2xl text-center hover:border-primary/50 transition-colors sm:col-span-1 col-span-2">
+                        <div class="stat-card glass p-4 rounded-2xl text-center hover:border-primary/50 transition-colors sm:col-span-1 col-span-2">
                             <h3 class="text-3xl font-bold text-white mb-1">100%</h3>
                             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Client Success</p>
                         </div>
@@ -179,18 +527,18 @@
                 </div>
 
                 <div class="relative reveal mt-8 lg:mt-0">
-                    <div class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-secondary/20 rounded-3xl blur-2xl transform rotate-6"></div>
-                    <div class="glass rounded-3xl p-8 relative z-10 border border-white/10 h-full flex flex-col justify-center">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-secondary/20 rounded-3xl blur-2xl transform rotate-6 animate-pulse"></div>
+                    <div class="glass-enhanced rounded-3xl p-8 relative z-10 border border-white/10 h-full flex flex-col justify-center">
                         <div class="space-y-6">
-                            <div class="flex items-center gap-4">
+                            <div class="skill-item flex items-center gap-4">
                                 <div class="w-12 h-12 flex-shrink-0 rounded-full bg-yellow-400/10 flex items-center justify-center text-yellow-400 text-2xl"><i class="fab fa-js"></i></div>
                                 <div><h4 class="font-bold text-lg">JavaScript Ecosystem</h4><p class="text-sm text-gray-400">React, Next.js, Node.js</p></div>
                             </div>
-                            <div class="flex items-center gap-4">
+                            <div class="skill-item flex items-center gap-4">
                                 <div class="w-12 h-12 flex-shrink-0 rounded-full bg-blue-400/10 flex items-center justify-center text-blue-400 text-2xl"><i class="fab fa-css3-alt"></i></div>
                                 <div><h4 class="font-bold text-lg">Modern Styling</h4><p class="text-sm text-gray-400">Tailwind CSS, Framer Motion</p></div>
                             </div>
-                            <div class="flex items-center gap-4">
+                            <div class="skill-item flex items-center gap-4">
                                 <div class="w-12 h-12 flex-shrink-0 rounded-full bg-green-400/10 flex items-center justify-center text-green-400 text-2xl"><i class="fas fa-database"></i></div>
                                 <div><h4 class="font-bold text-lg">Backend & Data</h4><p class="text-sm text-gray-400">SQL, NoSQL, Modern APIs</p></div>
                             </div>
@@ -228,24 +576,24 @@
                 My inbox is always open. Whether you have a question, a project idea, or just want to say hi, I'll try my best to get back to you!
             </p>
             
-            <div class="glass rounded-3xl p-8 md:p-12 relative overflow-hidden group border border-white/10 hover:border-primary/40 transition-colors duration-500">
+            <div class="contact-card glass rounded-3xl p-8 md:p-12 relative overflow-hidden group border border-white/10 hover:border-primary/40 transition-all duration-500">
                 <div class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
                 <div class="relative z-10 flex flex-col items-center">
-                    <div class="w-20 h-20 rounded-full glass flex items-center justify-center text-primary text-3xl mb-6 shadow-[0_0_30px_rgba(139,92,246,0.2)]">
+                    <div class="email-icon w-20 h-20 rounded-full glass flex items-center justify-center text-primary text-3xl mb-6 shadow-[0_0_30px_rgba(139,92,246,0.2)]">
                         <i class="fas fa-envelope"></i>
                     </div>
                     <h3 class="text-lg md:text-2xl font-bold mb-2 break-all">madevelopersoffical@gmail.com</h3>
                     <p class="text-gray-400 mb-8 font-inter">Lahore, Pakistan • Open to remote worldwide</p>
                     
-                    <a href="mailto:contact@muhammadayan.com" class="bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-full font-bold transition-all hover:scale-105 mb-8">
-                        Say Hello <i class="fas fa-paper-plane ml-2"></i>
+                    <a href="mailto:contact@muhammadayan.com" class="btn-primary bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-full font-bold transition-all hover:scale-105 mb-8">
+                        Say Hello <i class="fas fa-paper-plane ml-2 arrow-animation"></i>
                     </a>
 
                     <div class="flex gap-6 mt-4 border-t border-white/10 pt-8 w-full justify-center">
-                        <a href="https://github.com/ayan123-afk/" class="text-gray-400 hover:text-primary transform hover:-translate-y-1 transition-all text-2xl"><i class="fab fa-github"></i></a>
-                        <a href="https://www.linkedin.com/in/mr-ayan-ma-developers-152201371/" class="text-gray-400 hover:text-[#0a66c2] transform hover:-translate-y-1 transition-all text-2xl"><i class="fab fa-linkedin"></i></a>
-                        <a href="https://www.facebook.com/profile.php?id=61577401122875" class="text-gray-400 hover:text-[#1da1f2] transform hover:-translate-y-1 transition-all text-2xl"><i class="fab fa-facebook"></i></a>
+                        <a href="https://github.com/ayan123-afk/" class="social-icon text-gray-400 hover:text-primary transform transition-all text-2xl"><i class="fab fa-github"></i></a>
+                        <a href="https://www.linkedin.com/in/mr-ayan-ma-developers-152201371/" class="social-icon text-gray-400 hover:text-[#0a66c2] transform transition-all text-2xl"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://www.facebook.com/profile.php?id=61577401122875" class="social-icon text-gray-400 hover:text-[#1da1f2] transform transition-all text-2xl"><i class="fab fa-facebook"></i></a>
                     </div>
                 </div>
             </div>
@@ -333,10 +681,10 @@
             }
 
             container.innerHTML = projects.map((p, index) => `
-                <div class="group flex flex-col bg-[#0a0a0f] rounded-3xl border border-white/[0.05] overflow-hidden hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(139,92,246,0.3)] hover:border-primary/30 transition-all duration-500 reveal" style="transition-delay: ${index * 100}ms">
+                <div class="project-card group flex flex-col bg-[#0a0a0f] rounded-3xl border border-white/[0.05] overflow-hidden hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(139,92,246,0.3)] hover:border-primary/30 transition-all duration-500 reveal" style="transition-delay: ${index * 100}ms">
                     
                     <div class="relative w-full h-56 sm:h-64 overflow-hidden bg-[#111]">
-                        <img src="${p.image_url}" alt="${p.title}" class="absolute inset-0 w-full h-full object-cover object-center transform group-hover:scale-110 transition-transform duration-700 ease-in-out" loading="lazy">
+                        <img src="${p.image_url}" alt="${p.title}" class="absolute inset-0 w-full h-full object-cover object-center" loading="lazy">
                         <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/20 to-transparent opacity-90"></div>
                     </div>
                     
