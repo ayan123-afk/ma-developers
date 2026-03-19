@@ -1,1 +1,758 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Admin Dashboard | Portfolio</title> <script src="https://cdn.tailwindcss.com"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"> <script> tailwind.config = { theme: { extend: { fontFamily: { sans: ['Poppins', 'sans-serif'] }, colors: { primary: '#8b5cf6' } } } } </script> <style> body { background-color: #050505; color: #ffffff; } .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); } .input-field { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s; } .input-field:focus { outline: none; border-color: #8b5cf6; } input[type="file"]::file-selector-button { background-color: #8b5cf6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; margin-right: 1rem; } </style> </head> <body class="antialiased min-h-screen flex items-center justify-center p-6 relative"> <div class="w-full max-w-lg glass rounded-3xl p-8 relative z-10"> <div class="flex justify-between items-center mb-6"> <h1 class="text-3xl font-bold">Add Project</h1> <a href="index.html" class="text-gray-400 hover:text-white"><i class="fas fa-home text-xl"></i></a> </div> <!-- SUCCESS ALERT --> <div id="success-box" class="hidden mb-6 bg-green-500/10 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg text-sm"> <i class="fas fa-check-circle mr-2"></i> Successfully published! </div> <!-- ERROR ALERT --> <div id="error-box" class="hidden mb-6 bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm break-words"> <i class="fas fa-exclamation-triangle mr-2"></i> <span id="error-message">Error</span> </div> <form id="add-form" class="space-y-5"> <div> <label class="block text-sm text-gray-400 mb-1">Title</label> <input type="text" id="title" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="Project Name"> </div> <div> <label class="block text-sm text-gray-400 mb-1">Description</label> <textarea id="description" required rows="3" class="input-field w-full px-4 py-3 rounded-xl" placeholder="Project details..."></textarea> </div> <div> <label class="block text-sm text-gray-400 mb-1">Live URL</label> <input type="url" id="live_url" required class="input-field w-full px-4 py-3 rounded-xl" placeholder="https://..."> </div> <div> <label class="block text-sm text-gray-400 mb-1">Image Cover</label> <input type="file" id="image" accept="image/*" required class="input-field w-full px-4 py-2 rounded-xl text-gray-400"> </div> <button type="submit" id="submit-btn" class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl transition-all mt-4"> Publish Project </button> </form> </div> <script type="module"> import { uploadImage, addProject } from './supabase.js'; const form = document.getElementById('add-form'); const submitBtn = document.getElementById('submit-btn'); const successBox = document.getElementById('success-box'); const errorBox = document.getElementById('error-box'); const errorMsg = document.getElementById('error-message'); form.addEventListener('submit', async (e) => { e.preventDefault(); // Reset UI successBox.classList.add('hidden'); errorBox.classList.add('hidden'); submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Uploading Image...'; submitBtn.disabled = true; submitBtn.classList.add('opacity-50'); try { const file = document.getElementById('image').files[0]; if (!file) throw new Error("Please select an image file."); // 1. Upload Image const uploadRes = await uploadImage(file); if (!uploadRes.success) throw new Error("Image Upload Error: " + uploadRes.error); // 2. Insert to Database submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving to Database...'; const projectData = { title: document.getElementById('title').value, description: document.getElementById('description').value, live_url: document.getElementById('live_url').value, image_url: uploadRes.url }; const dbRes = await addProject(projectData); if (!dbRes.success) throw new Error("Database Error: " + dbRes.error); // 3. Success form.reset(); successBox.classList.remove('hidden'); } catch (error) { // Show Error errorMsg.innerText = error.message; errorBox.classList.remove('hidden'); } finally { // Restore Button submitBtn.innerHTML = 'Publish Project'; submitBtn.disabled = false; submitBtn.classList.remove('opacity-50'); } }); </script> </body> </html>
+
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Admin Dashboard | Portfolio</title> 
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script> 
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }, 
+                    colors: { 
+                        primary: '#8b5cf6',
+                        secondary: '#ec4899',
+                        dark: '#0a0a0f',
+                        darker: '#050505'
+                    } 
+                } 
+            } 
+        } 
+    </script> 
+    
+    <style> 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            background: #050505;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        /* Modern Gradient Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Animated Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* Main Container */
+        .admin-container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(10, 10, 15, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .admin-container:hover {
+            transform: translateY(-5px);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        /* Header Section */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .title-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.4);
+        }
+
+        .title-text h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #a0a0a0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .title-text p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Home Button */
+        .home-button {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .home-button:hover {
+            background: #8b5cf6;
+            color: white;
+            transform: rotate(360deg) scale(1.1);
+            border-color: transparent;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .alert i {
+            font-size: 1.2rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .form-label i {
+            color: #8b5cf6;
+            margin-right: 0.5rem;
+            width: 20px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1rem 1.2rem;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        textarea.input-field {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* Character Counter */
+        .char-counter {
+            position: absolute;
+            bottom: 0.8rem;
+            right: 1rem;
+            font-size: 0.8rem;
+            color: #666;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus ~ .char-counter {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        /* File Input */
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem 1rem;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-wrapper input[type="file"]:hover {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .file-input-wrapper input[type="file"]::file-selector-button {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            margin-right: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-wrapper input[type="file"]::file-selector-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.4);
+        }
+
+        .file-info {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-info i {
+            color: #8b5cf6;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 1.2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .submit-btn:hover:not(:disabled)::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 30px -10px rgba(139, 92, 246, 0.5);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .submit-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: #8b5cf6;
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #8b5cf6;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* Loading Spinner */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Floating Particles */
+        .particle {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .admin-container {
+                padding: 1.5rem;
+            }
+
+            .title-text h1 {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Image Preview */
+        .image-preview {
+            margin-top: 1rem;
+            display: none;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        /* Input Validation Icons */
+        .validation-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #22c55e;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .input-field.valid ~ .validation-icon {
+            opacity: 1;
+        }
+    </style>
+</head> 
+<body>
+    <!-- Grid Background -->
+    <div class="grid-bg"></div>
+
+    <!-- Floating Particles -->
+    <div id="particles"></div>
+
+    <!-- Main Container -->
+    <div class="admin-container">
+        
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="admin-title">
+                <div class="title-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div class="title-text">
+                    <h1>Add New Project</h1>
+                    <p>Fill in the details below</p>
+                </div>
+            </div>
+            <a href="index.html" class="home-button">
+                <i class="fas fa-home"></i>
+            </a>
+        </div>
+
+        <!-- Success Alert -->
+        <div id="success-box" class="alert alert-success hidden">
+            <i class="fas fa-check-circle"></i>
+            <span>Project published successfully! 🎉</span>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="error-box" class="alert alert-error hidden">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="error-message">Error message</span>
+        </div>
+
+        <!-- Form -->
+        <form id="add-form">
+            <!-- Title Field -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-heading"></i>
+                    Project Title
+                </label>
+                <div class="input-wrapper">
+                    <input type="text" id="title" required class="input-field" placeholder="e.g., Modern E-Commerce Platform">
+                    <i class="fas fa-check validation-icon"></i>
+                </div>
+            </div>
+
+            <!-- Description Field -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-align-left"></i>
+                    Description
+                </label>
+                <div class="input-wrapper">
+                    <textarea id="description" required class="input-field" placeholder="Describe your project in detail..."></textarea>
+                    <span class="char-counter">0/500</span>
+                </div>
+            </div>
+
+            <!-- Live URL Field -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-link"></i>
+                    Live URL
+                </label>
+                <div class="input-wrapper">
+                    <input type="url" id="live_url" required class="input-field" placeholder="https://yourproject.com">
+                    <i class="fas fa-check validation-icon"></i>
+                </div>
+            </div>
+
+            <!-- Image Upload Field -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-image"></i>
+                    Cover Image
+                </label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="image" accept="image/*" required>
+                </div>
+                <div class="file-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Recommended: 1200x800px (Max 5MB)</span>
+                </div>
+                <div id="image-preview" class="image-preview">
+                    <img src="" alt="Preview">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submit-btn" class="submit-btn">
+                <i class="fas fa-rocket"></i>
+                <span>Publish Project</span>
+            </button>
+        </form>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="total-projects">0</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="published-today">0</div>
+                <div class="stat-label">Published Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="draft">0</div>
+                <div class="stat-label">Drafts</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { uploadImage, addProject } from './supabase.js';
+
+        // DOM Elements
+        const form = document.getElementById('add-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const successBox = document.getElementById('success-box');
+        const errorBox = document.getElementById('error-box');
+        const errorMsg = document.getElementById('error-message');
+        const description = document.getElementById('description');
+        const charCounter = document.querySelector('.char-counter');
+        const imageInput = document.getElementById('image');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImg = imagePreview.querySelector('img');
+
+        // Character Counter
+        description.addEventListener('input', function() {
+            const length = this.value.length;
+            charCounter.textContent = `${length}/500`;
+            
+            if (length > 500) {
+                this.value = this.value.substring(0, 500);
+                charCounter.textContent = '500/500';
+            }
+        });
+
+        // Image Preview
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+            }
+        });
+
+        // Input Validation
+        const inputs = document.querySelectorAll('.input-field');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.classList.add('valid');
+                } else {
+                    this.classList.remove('valid');
+                }
+            });
+        });
+
+        // Form Submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Hide previous alerts
+            successBox.classList.add('hidden');
+            errorBox.classList.add('hidden');
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+
+            try {
+                const file = imageInput.files[0];
+                if (!file) throw new Error("Please select an image");
+
+                // Upload Image
+                const uploadRes = await uploadImage(file);
+                if (!uploadRes.success) throw new Error(uploadRes.error);
+
+                // Update button text
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+                // Save to Database
+                const projectData = {
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    live_url: document.getElementById('live_url').value,
+                    image_url: uploadRes.url
+                };
+
+                const dbRes = await addProject(projectData);
+                if (!dbRes.success) throw new Error(dbRes.error);
+
+                // Success
+                form.reset();
+                imagePreview.style.display = 'none';
+                charCounter.textContent = '0/500';
+                
+                successBox.classList.remove('hidden');
+                
+                // Update stats (you can implement this)
+                const totalProjects = document.getElementById('total-projects');
+                totalProjects.textContent = parseInt(totalProjects.textContent) + 1;
+
+                // Auto hide success message
+                setTimeout(() => {
+                    successBox.classList.add('hidden');
+                }, 5000);
+
+            } catch (error) {
+                // Error
+                errorMsg.textContent = error.message;
+                errorBox.classList.remove('hidden');
+
+                // Shake effect
+                errorBox.style.animation = 'none';
+                errorBox.offsetHeight;
+                errorBox.style.animation = 'slideIn 0.3s ease';
+
+            } finally {
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Publish Project';
+            }
+        });
+
+        // Create Floating Particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 20;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animation = `floatParticle ${10 + Math.random() * 20}s linear infinite`;
+                particle.style.opacity = 0.1 + Math.random() * 0.3;
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Add floating animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes floatParticle {
+                from {
+                    transform: translateY(100vh) translateX(0);
+                }
+                to {
+                    transform: translateY(-100vh) translateX(${Math.random() * 200 - 100}px);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        createParticles();
+
+        // Fetch total projects count (you can implement this)
+        async function fetchTotalProjects() {
+            // Implement your logic to fetch total projects
+            // For now, just a placeholder
+            document.getElementById('total-projects').textContent = '12';
+            document.getElementById('published-today').textContent = '3';
+            document.getElementById('draft').textContent = '2';
+        }
+
+        fetchTotalProjects();
+    </script>
+</body> 
+</html>
